@@ -262,6 +262,29 @@ func (e encoder) marshalMessage(m protoreflect.Message, typeURL string) error {
 			name = fd.TextName()
 		}
 
+		oneOf := fd.ContainingOneof()
+		if oneOf != nil {
+			oneOfName := string(oneOf.Name())
+			if err = e.WriteName(oneOfName); err != nil {
+				return false
+			}
+			e.StartObject()
+			if err := e.WriteName("case"); err != nil {
+				return false
+			}
+			if err := e.WriteString(name); err != nil {
+				return false
+			}
+			if err := e.WriteName("value"); err != nil {
+				return false
+			}
+			if err := e.marshalValue(v, fd); err != nil {
+				return false
+			}
+			e.EndObject()
+			return true
+		}
+
 		if err = e.WriteName(name); err != nil {
 			return false
 		}
@@ -270,6 +293,7 @@ func (e encoder) marshalMessage(m protoreflect.Message, typeURL string) error {
 		}
 		return true
 	})
+
 	return err
 }
 
